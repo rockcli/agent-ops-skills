@@ -1,0 +1,4 @@
+interface:
+  display_name: "MR 评审与原则邮件"
+  short_description: "审查 GitLab MR，核实新旧归因，发布评论并发送简短原则邮件"
+  default_prompt: "使用 $mr-review-mail 审查这个 GitLab MR，区分新增与历史问题，准备评论和 500 字以内的通用开发原则邮件；按本次授权范围发布和发送。"

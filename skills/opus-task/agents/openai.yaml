@@ -1,0 +1,3 @@
+interface:
+  display_name: "Opus 任务"
+  short_description: "直接让 Opus 调查或实施已授权工作，支持后台续接、取消与完成通知"

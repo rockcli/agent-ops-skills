@@ -1,0 +1,3 @@
+interface:
+  display_name: "Opus & Codex 独立审查"
+  short_description: "默认并行发起 Opus(medium) 与 Codex(medium) 独立无偏审查，单方不可用时由 DSH 补位"
