@@ -4,6 +4,8 @@
 
 **A curated pack of 16 battle-tested Agent Skills for multi-model blind review, cross-host orchestration, and terminal automation.**
 
+[![CI](https://github.com/rockcli/agent-ops-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/rockcli/agent-ops-skills/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/rockcli/agent-ops-skills?display_name=tag&color=10B981)](https://github.com/rockcli/agent-ops-skills/releases/tag/v0.1.0)
 [![Skills](https://img.shields.io/badge/Skills-16-111827)](skills)
 [![Agents](https://img.shields.io/badge/Agents-Claude%20Code%20%7C%20Codex%20%7C%20Antigravity%20%7C%20DSH-2563EB)](#quick-start)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -11,6 +13,14 @@
 English | [简体中文](README.zh-CN.md)
 
 </div>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="docs/architecture-light.png" />
+    <img src="docs/architecture-light.png" alt="agent-ops-skills architecture" width="900" />
+  </picture>
+</p>
 
 ## Features
 
