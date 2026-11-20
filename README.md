@@ -97,6 +97,25 @@ python3 -m unittest discover -s skills/dsh-review/scripts/tests -v
 python3 -m unittest discover -s skills/mr-review-mail/scripts -p 'test_*.py' -v
 ```
 
+## Non-Goals
+
+- **Not a hosted SaaS, proxy relay, or credential store** — All skills execute locally on top of existing CLI logins (`codex`, `claude`, loopback `dsh web`) with zero telemetry.
+- **Not an OS-level sandbox across every backend** — `opus-review` / `opus-task` (`--tools Read Glob Grep`) use tool-level restrictions rather than an OS sandbox; `dsh-review` enforces read-only behavior via prompt rules (`start` isolates code in a frozen snapshot directory, whereas `task` operates inside `--repo`); `codex-task --write --host-access` enables `--sandbox danger-full-access` gated only by `--authorization` scope and prompt instructions.
+- **Not full-history snapshot mirroring** — Frozen review snapshots omit full `.git` history and skip git submodules (skipped entries are recorded in `context/manifest.json`).
+- **Platform-scoped automation** — `tui-continue-scheduler` targets macOS + Ghostty + Claude Code (`launchd`, `osascript`, BSD `stat`, `~/.claude/projects/*.jsonl`), and `storage-analyzer`'s Windows scan/trash path (`SHFileOperationW`) has not been verified on a real Windows host.
+
+## Known Pitfalls
+
+- **Never use `opus.py task` for code diff reviews** — Read-only `task` mode lacks `Bash` and pre-generated `context/diff.patch`, so diffs must run via `start` against frozen snapshots.
+- **Private upstream schemas** — `codex-thread-takeover` reads undocumented Codex SQLite/JSONL internals (`state_5.sqlite`, `thread_history_1.sqlite`), which can shift across Codex releases.
+- **macOS TUI & `launchd` traps** — `tui-continue-scheduler` requires two separate `osascript` calls (text then Enter), stopping on the *first* `cwd` in Claude JSONL logs (ignoring sidechain subagent directories), and polling via `StartInterval` + self-gating instead of `StartCalendarInterval` with `Year` (see [`pitfalls.md`](skills/tui-continue-scheduler/references/pitfalls.md)).
+
+## Security & Trust Boundaries
+
+- **Local runtime & credentials** — Job state directories use `umask 0o077` (`0o700` dirs, `0o600` files). `dsh-review` and `dsh-session-bridge` read `$DSH_HOME/.credentials.yaml` to sign loopback `127.0.0.1:3080` cookies; `dsh.py` disables system proxies for loopback, while `opus.py` fails closed if proxy discovery or its 2s TCP check fails.
+- **Snapshot & resume hardening** — Working-tree snapshots reject `..`/absolute paths, external or absolute symlinks, post-copy link escapes, file mtime/size drift, and concurrent `git status` mutations; `--resume-job` rejects changing `kind`, `write`, `network`, `addDir`, `hostAccess`, `authorization`, or `repo`.
+- **Unattended side-effect guards** — `storage-analyzer/server.py` binds `127.0.0.1:0` with a random bearer token, validates `Host` headers against DNS rebinding, resolves realpaths against severity allowlists, and keeps hard `rm` disabled unless `--allow-hard-delete` is passed. `mr-review-mail/send_mail.py` defaults to dry preview, enforces atomic one-shot `--receipt` locks (`open(..., 'x')`), and strips raw SMTP errors to avoid secret leakage.
+
 ## Attribution & Notes
 
 - All skills run locally with your own CLI/tool credentials and zero telemetry.

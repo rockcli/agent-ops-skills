@@ -97,6 +97,25 @@ python3 -m unittest discover -s skills/dsh-review/scripts/tests -v
 python3 -m unittest discover -s skills/mr-review-mail/scripts -p 'test_*.py' -v
 ```
 
+## 非目标
+
+- **非云端托管服务、代理中转或凭据管家** — 所有技能均在本地复用已有 CLI 登录态（`codex`、`claude`、本机 loopback `dsh web`），无任何遥测上报。
+- **不承诺全后端均为 OS 级强沙盒** — `opus-review` / `opus-task`（`--tools Read Glob Grep`）属于工具层限制而非 OS 沙盒；`dsh-review` 无 OS 只读沙盒，只靠提示词约束只读（`start` 模式隔离在冻结快照目录中，`task` 模式直接作用于 `--repo`）；`codex-task --write --host-access` 会启用 `--sandbox danger-full-access`，由 `--authorization` 授权范围与提示词约束边界。
+- **冻结快照不包含完整 Git 历史** — `snapshot()` 仅冻结目标代码状态并记录跳过项至 `context/manifest.json`，不会保留完整提交历史或自动展开子模块。
+- **平台适用范围有限** — `tui-continue-scheduler` 仅适用于 macOS + Ghostty + Claude Code（依赖 `launchd`、`osascript`、BSD `stat` 与 `~/.claude/projects/*.jsonl`）；`storage-analyzer` 的 Windows 路径（`SHFileOperationW`）尚未在真实 Windows 主机实测。
+
+## 已知坑点
+
+- **`opus.py task` 禁止用于代码 diff 审查** — 只读 `task` 模式没有 `Bash` 权限且不生成 `context/diff.patch`，代码 diff 审查必须走 `start` 模式。
+- **依赖上游内部私有存储** — `codex-thread-takeover` 直接只读 Codex 未文档化的 SQLite/JSONL 内部结构（`state_5.sqlite`、`thread_history_1.sqlite`），上游升级后结构可能变化。
+- **macOS TUI 与 `launchd` 深坑** — `tui-continue-scheduler` 必须拆成两次 `osascript` 发送文本与回车、在 Claude JSONL 中取**第一条** `cwd` 以防被 sidechain 子代理目录劫持，并用 `StartInterval` 轮询自检替代带 `Year` 的 `StartCalendarInterval`（详见 [`pitfalls.md`](skills/tui-continue-scheduler/references/pitfalls.md)）。
+
+## 安全与信任边界
+
+- **本地运行态与凭据隔离** — 任务状态目录统一采用 `umask 0o077`（目录 `0o700`、文件 `0o600`）。`dsh-review` 与 `dsh-session-bridge` 读取 `$DSH_HOME/.credentials.yaml` 签发 `127.0.0.1:3080` 本地 Cookie；`dsh.py` 对 loopback 显式绕过系统代理，而 `opus.py` 在代理探测或 2 秒 TCP 连通检查失败时会 fail-closed 拒绝启动。
+- **快照校验与续跑防提权** — 工作区快照拒绝 `..`/绝对路径、外部或绝对符号链接、拷贝后路径逃逸、文件 mtime/size 漂移及并发 `git status` 变更；`--resume-job` 严禁篡改 `kind`、`write`、`network`、`addDir`、`hostAccess`、`authorization` 或 `repo`。
+- **高风险操作守门** — `storage-analyzer/server.py` 仅绑定 `127.0.0.1:0` 并校验随机 Bearer Token 与防 DNS 重绑定 `Host` 头，按真实路径与红/黄/绿分级白名单放行操作，默认禁用永久删除（`--allow-hard-delete` 才开启）。`mr-review-mail/send_mail.py` 默认仅预览不发信，通过互斥创建 `--receipt`（`open(..., 'x')`）防重复发送，并剥离原始 SMTP 异常避免凭据泄露。
+
 ## 致谢与说明
 
 - 所有技能均在本地运行并复用你本机已有的 CLI/工具凭据，无第三方中转服务、无遥测上报。
